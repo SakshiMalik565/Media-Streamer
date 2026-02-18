@@ -1,13 +1,24 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import Pagination from "../components/pagination";
+
+const PAGE_SIZE = 12;
 
 function WatchHistory() {
+    const [searchParams] = useSearchParams();
+    const page = Number(searchParams.get("page") || 1);
     const [history, setHistory] = useState(() => {
         const stored = JSON.parse(localStorage.getItem('watchHistory') || '[]');
         return Array.isArray(stored) ? stored : [];
     });
     const navigate = useNavigate();
-    console.log("history",history);
+
+    const totalPages = Math.max(1, Math.ceil(history.length / PAGE_SIZE));
+    const safePage = Math.min(Math.max(page, 1), totalPages);
+    const pagedHistory = useMemo(() => {
+        const start = (safePage - 1) * PAGE_SIZE;
+        return history.slice(start, start + PAGE_SIZE);
+    }, [history, safePage]);
 
     function clearHistory() {
         localStorage.removeItem('watchHistory');
@@ -33,25 +44,32 @@ function WatchHistory() {
             {history.length === 0 ? (
                 <div className="mt-6 text-slate-500">No watch history found.</div>
             ) : (
-                <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {history.map((video, idx) => (
-                        <div
-                            key={video.id || idx}
-                            className="media-card cursor-pointer"
-                            onClick={() => navigate(`/watch/${video.id}`)}
-                        >
-                            <img
-                                src={video.thumbnail}
-                                alt={video.title}
-                                className="media-thumb"
-                            />
-                            <div className="p-3">
-                                <h3 className="media-title line-clamp-2 text-sm">{video.title}</h3>
-                                <p className="media-meta mt-1 text-xs">{video.channelTitle}</p>
+                <>
+                    <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {pagedHistory.map((video, idx) => (
+                            <div
+                                key={video.id || idx}
+                                className="media-card cursor-pointer"
+                                onClick={() => navigate(`/watch/${video.id}`)}
+                            >
+                                <img
+                                    src={video.thumbnail}
+                                    alt={video.title}
+                                    className="media-thumb"
+                                />
+                                <div className="p-3">
+                                    <h3 className="media-title line-clamp-2 text-sm">{video.title}</h3>
+                                    <p className="media-meta mt-1 text-xs">{video.channelTitle}</p>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                    <Pagination
+                        currentPage={safePage}
+                        hasPrev={safePage > 1}
+                        hasNext={safePage < totalPages}
+                    />
+                </>
             )}
         </div>
     );
