@@ -33,9 +33,7 @@ export default function Search() {
                 setLoading(true)
                 setError('')
                 const response = await fetch(
-                    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
-                        query,
-                    )}&type=video&maxResults=25&key=${apiKey}`,
+                    `https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&q=${query}&key=${import.meta.env.VITE_RAPID_API_KEY}`,
                 )
                 const data = await response.json()
                 const formattedVideos = (data.items || []).map((video) => ({
@@ -59,10 +57,13 @@ export default function Search() {
     }, [apiKey, query])
 
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">
-                {query ? `Search Results for "${query}"` : 'Search'}
-            </h1>
+        <div className="page-surface">
+            <div className="flex flex-col gap-2">
+                <h1 className="section-title">
+                    {query ? `Search Results for "${query}"` : 'Search'}
+                </h1>
+                <p className="section-subtitle">Explore fresh uploads and curated highlights.</p>
+            </div>
             {loading && <p>Loading search results...</p>}
             {error && <p className="text-red-500">{error}</p>}
             {!loading && !error && query && videos.length === 0 && (
@@ -70,20 +71,20 @@ export default function Search() {
             )}
 
             {!loading && !error && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     {videos.map((video) => {
                         const card = (
-                            <div className="bg-white rounded-lg shadow-md overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
+                            <div className="media-card">
                                 <img
                                     src={video.thumbnail}
                                     alt={video.title}
-                                    className="w-full h-48 object-cover"
+                                    className="media-thumb"
                                 />
                                 <div className="p-4">
-                                    <h2 className="text-sm font-semibold mb-2 line-clamp-2">
+                                    <h2 className="media-title mb-2 line-clamp-2 text-sm">
                                         {video.title}
                                     </h2>
-                                    <p className="text-gray-600 text-sm">{video.channelTitle}</p>
+                                    <p className="media-meta text-sm">{video.channelTitle}</p>
                                 </div>
                             </div>
                         )
